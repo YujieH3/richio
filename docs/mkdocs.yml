@@ -1,0 +1,6 @@
+site_name: RICHIO
+# 
+site_author: Yujie He
+# 
+theme:
+  name: readthedocs
