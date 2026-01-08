@@ -322,14 +322,55 @@ class Snapshot:
         y: str | ArrayLike = "Y", 
         z: str | ArrayLike = "Z",
         plane: str = "xy",
-        slice_coord: float | u.array.unyt_quantity | None = None,
+        slice_coord: float | u.array.unyt_quantity = 0,
         box_size: ArrayLike | None = None,
         selection: ArrayLike | None = None,
         unit_system: str = "cgs",
         volume_selection: bool = True, # select based on volume to speed up calculation
     ):
-        """
-        Make a slice. 
+        """Make a slice of the simulation grid. Outputs the intepolated data and
+        the indices.
+
+        :param data: The data colume to interpolate, can be the name of the
+            column ("density") or an array of size (N,) (snap.density)
+        :type data: str | ArrayLike
+        :param res: Resolution, can be one integer for a square grid (256 means a
+            256x256 grid) or a tuple/array (X, Y) for an irregular grid
+        :type res: int | ArrayLike
+        :param x: The x coordinates of mesh generating points, can be name of
+            the column or an array, defaults to "X"
+        :type x: str | ArrayLike, optional
+        :param y: The y coordinates of mesh generating points, can be name of
+            the column or an array, defaults to "Y"
+        :type y: str | ArrayLike, optional
+        :param z: The z coordinates of mesh generating points, can be name of
+            the column or an array, defaults to "Z"
+        :type z: str | ArrayLike, optional
+        :param plane: "xy", "yz", "xz", or in any other order, like "yx",
+            defaults to "xy"
+        :type plane: str, optional
+        :param slice_coord: The coordinates of the orthogonal axis to the
+            slicing plane, defaults to 0
+        :type slice_coord: float | u.array.unyt_quantity | None, optional
+        :param box_size: An array of (x_lower, y_lower, z_lower, x_upper,
+            y_upper, z_upper), or (x1_lower, x2_lower, x1_upper, x2_upper)
+            depending on the 'plane' parameter. Will read from the box_size of
+            the snapshot if not given, defaults to None
+        :type box_size: ArrayLike | None, optional
+        :param selection: A bool array of size (N,) which filters what particles
+            in the simulation are plotted, defaults to None
+        :type selection: ArrayLike | None, optional
+        :param unit_system: The data will be converted to given 'unyt' unit
+            system, can be "cgs", "rich"(code solar units) or other unyt units,
+            defaults to "cgs"
+        :type unit_system: str, optional
+        :param volume_selection: If turned on, only cells within a distance of
+            volume**(1/3) to the slicing plane will be used, which speeds up the
+            computation a lot (without losing much accuracy), defaults to True
+        :type volume_selection: bool, optional
+        :return: The interpolated data on a grid data, linear space of the x
+            grid, linear space of the y grid
+        :rtype: (unyt.unyt_array, unyt.unyt_array, unyt.unyt_array)
         """
         # TODO: implement star_mask : put data to zero instead of removing them
         # (which is bad if you use nn) and put them to the lowest color in
@@ -376,6 +417,12 @@ class Snapshot:
             elif len(box_size) == 4:
                 x0, y0, x1, y1 = box_size
 
+        # Assign code unit if slice_coord doesn't have a unit
+        if isinstance(slice_coord, u.unyt_quantity):
+            pass
+        else:
+            slice_coord *= units.lscale
+
         # Select only cells in proximity
         if volume_selection:
             mask = np.abs(z - slice_coord) < volume**(1/3)
@@ -389,12 +436,6 @@ class Snapshot:
 
         # x_slice, y_slice, z_slice should only have one that is not None
         x, y, z = _parse_plane(plane, x, y, z)      # redefine x y to be the plane, z the sliced direction
-
-        # Assign code unit if slice_coord doesn't have a unit
-        if isinstance(slice_coord, u.unyt_quantity):
-            pass
-        else:
-            slice_coord *= units.lscale
 
         # Make Euclidean grid
         xspace = np.linspace(x0, x1, nx, endpoint=False)
@@ -710,13 +751,13 @@ def _parse_plane(plane, x, y, z):
 
 
 
-def _kdtree_interpolate(coords, grid_coords, k=1, eps=0, workers=1, **kwargs):
+def _kdtree_interpolate(coords, grid_coords, k=1, eps=0, workers=1):
 
     from scipy.spatial import KDTree
 
     tree = KDTree(coords)  # build tree
     d, i = tree.query(
-        grid_coords, k=1, eps=0.0, p=2, workers=1
+        grid_coords, k=k, eps=eps, p=2, workers=workers
     )  # the most time-consuming step
 
     return i
