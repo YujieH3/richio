@@ -52,7 +52,7 @@ class Snapshot:
         if match:
             return int(match.group(1))
         else:
-            warnings.warn(f"No snapshot number found in path: {self.path}")
+            # warnings.warn(f"No snapshot number found in path: {self.path}")
             return -1
 
     @classmethod
