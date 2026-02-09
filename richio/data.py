@@ -239,8 +239,8 @@ class Snapshot:
         To make use of the unit system, use either str keys or unyt_array data
         for `data`, `x`, `y`, `z`, `box_size`.
         """
-        grid_data, i, xspace, yspace, zspace = self.to_grid(data, res + 1, 
-                x, y, z, box_size, unit_system, selection, endpoint=True)
+        grid_data, i, xspace, yspace, zspace = self.to_grid(data, res, 
+                x, y, z, box_size, selection)
 
         dz = zspace[1:] - zspace[:-1]                                                 #PM: dz = (z1 - z0) / (nz - 1)
         projected_data = np.sum(grid_data[:-1, :-1, :-1] * dz, axis=-1).in_base(unit_system)#PM: grid_data[:, :, :-1]
@@ -257,7 +257,6 @@ class Snapshot:
         y: str | ArrayLike = "Y",
         z: str | ArrayLike = "Z",
         box_size: ArrayLike | None = None,
-        unit_system: str = "cgs",
         selection: ArrayLike = None,
         endpoint: bool = False,
     ):
@@ -297,8 +296,8 @@ class Snapshot:
             nx = ny = nz = res
 
         # Make Euclidean grid
-        xspace = np.linspace(x0, x1, nx, endpoint=endpoint)  # disable endpoints such that dz = (z1-z0)/res instead of (z1-z0)/(res-1)
-        yspace = np.linspace(y0, y1, ny, endpoint=endpoint)                                                #PM: endpoint=True
+        xspace = np.linspace(x0, x1, nx, endpoint=endpoint)  # disable endpoints by default such that dz = (z1-z0)/res instead of (z1-z0)/(res-1)
+        yspace = np.linspace(y0, y1, ny, endpoint=endpoint)  #PM: endpoint=True
         zspace = np.linspace(z0, z1, nz, endpoint=endpoint)  # TODO: add an option to use np.geomspace
 
         X, Y, Z = np.meshgrid(xspace, yspace, zspace, indexing="ij")
@@ -423,6 +422,9 @@ class Snapshot:
         else:
             slice_coord *= units.lscale
 
+        # x_slice, y_slice, z_slice should only have one that is not None
+        x, y, z = _parse_plane(plane, x, y, z)      # redefine x y to be the plane, z the sliced direction
+
         # Select only cells in proximity
         if volume_selection:
             mask = np.abs(z - slice_coord) < volume**(1/3)
@@ -434,8 +436,6 @@ class Snapshot:
             y = y[mask]
             z = z[mask]
 
-        # x_slice, y_slice, z_slice should only have one that is not None
-        x, y, z = _parse_plane(plane, x, y, z)      # redefine x y to be the plane, z the sliced direction
 
         # Make Euclidean grid
         xspace = np.linspace(x0, x1, nx, endpoint=False)
