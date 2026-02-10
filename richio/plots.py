@@ -61,7 +61,7 @@ class SnapshotPlotter:
         y: str | ArrayLike = "Y", 
         z: str | ArrayLike = "Z",
         plane: str = "xy",
-        slice_coord: float | u.array.unyt_quantity | None = None,
+        slice_coord: float | u.array.unyt_quantity = 0,
         box_size: ArrayLike | None = None,
         selection: ArrayLike | None = None,
         unit_system: str = "cgs",
