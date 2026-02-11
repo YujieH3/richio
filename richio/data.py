@@ -519,7 +519,8 @@ class SnapshotH5(
 
     def __init__(self, path):
         self.path = path
-        self.rank = self._get_rank()  # after setting path
+        self.rank = self._get_rank()        # after setting path
+        self.f = h5py.File(self.path, "r")  # allow easy access to the h5py file
 
         super().__init__(path)  # inherit all methods from parent class
 
@@ -556,7 +557,6 @@ class SnapshotH5(
 
         with h5py.File(self.path, "r") as f:
             try:
-                # print(field)
                 arr = np.concatenate([f[f"rank{i}/{field}"] for i in range(self.rank)])
                 arr *= units.get_unit(field)
             except KeyError:  # If field is not under rank, try on the root order
@@ -566,16 +566,19 @@ class SnapshotH5(
 
     def __len__(self) -> int:
         """
-        Number of particles of the snapshot, combining different snapshots.
+        Number of particles of the snapshot, combining different ranks.
+        Use the X coordinate to get the number.
         """
-        np = 0
         with h5py.File(self.path, "r") as f:
-            for i in range(self.rank):
-                rankgroup = f[f"rank{i}"]
-                for key in rankgroup.keys():
-                    np += len(rankgroup[key])
-                    break
-        return np
+            try:
+                n = np.sum([len(f[f"rank{i}/X"]) for i in range(self.rank)])
+            except KeyError:
+                try:
+                    n = len(f["X"])
+                except KeyError:
+                    raise Exception("Failed to get length. Neither field X nor rank0/X exists.")
+
+        return n
 
     def keys(self) -> list:  # Update this to recursively list all datasets
         """
@@ -755,8 +758,8 @@ def _kdtree_interpolate(coords, grid_coords, k=1, eps=0, workers=1):
 
     from scipy.spatial import KDTree
 
-    tree = KDTree(coords)  # build tree
-    d, i = tree.query(
+    kdtree = KDTree(coords)  # build tree
+    d, i = kdtree.query(
         grid_coords, k=k, eps=eps, p=2, workers=workers
     )  # the most time-consuming step
 
