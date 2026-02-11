@@ -1,8 +1,17 @@
-"""
-Contains the main class Snapshot (SnapshotH5 and SnapshotNPY)
-
-By: Yujie He
-"""
+#  Copyright 2025 The RICHIO Contributors
+#
+#  This file is part of RICHIO.
+#
+#  RICHIO is free software: you can redistribute it and/or modify it under
+#  the terms of the European Union Public License version 1.2 or later, as
+#  published by the European Commission.
+#
+#  RICHIO is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+#  A PARTICULAR PURPOSE. See the European Union Public License for more details.
+#
+#  You should have received a copy of the EUPL in an/all official language(s) of
+#  the European Union along with RICHIO.  If not, see <https://eupl.eu>.
 
 import os
 import re
@@ -253,9 +262,9 @@ class Snapshot:
         self,
         data: str | ArrayLike,
         res: int | ArrayLike,
-        x: str | ArrayLike = "X",
-        y: str | ArrayLike = "Y",
-        z: str | ArrayLike = "Z",
+        X: str | ArrayLike = "X",
+        Y: str | ArrayLike = "Y",
+        Z: str | ArrayLike = "Z",
         box_size: ArrayLike | None = None,
         selection: ArrayLike = None,
         endpoint: bool = False,
@@ -265,16 +274,16 @@ class Snapshot:
         """
         # Fetch data
         data = self._get_data(data)
-        x = self._get_data(x)
-        y = self._get_data(y)
-        z = self._get_data(z)
+        X = self._get_data(X)
+        Y = self._get_data(Y)
+        Z = self._get_data(Z)
 
         # Select cells
         if selection is not None:
             data = data[selection]
-            x = x[selection]
-            y = y[selection]
-            z = z[selection]
+            X = X[selection]
+            Y = Y[selection]
+            Z = Z[selection]
 
         # Set boxsize
         if box_size is None:
@@ -300,10 +309,10 @@ class Snapshot:
         yspace = np.linspace(y0, y1, ny, endpoint=endpoint)  #PM: endpoint=True
         zspace = np.linspace(z0, z1, nz, endpoint=endpoint)  # TODO: add an option to use np.geomspace
 
-        X, Y, Z = np.meshgrid(xspace, yspace, zspace, indexing="ij")
+        grid_x, grid_y, grid_z = np.meshgrid(xspace, yspace, zspace, indexing="ij")
 
-        coords = np.stack([x, y, z], axis=-1)  # coordinates of the particles
-        grid_coords = np.stack([X, Y, Z], axis=-1)  # coordinates of the grid (query points)
+        coords = np.stack([X, Y, Z], axis=-1)  # coordinates of the particles
+        grid_coords = np.stack([grid_x, grid_y, grid_z], axis=-1)  # coordinates of the grid (query points)
 
         i = _kdtree_interpolate(coords=coords, grid_coords=grid_coords)
 
@@ -317,9 +326,9 @@ class Snapshot:
         self, 
         data: str | ArrayLike, 
         res: int | ArrayLike, 
-        x: str | ArrayLike = "X", 
-        y: str | ArrayLike = "Y", 
-        z: str | ArrayLike = "Z",
+        X: str | ArrayLike = "X", 
+        Y: str | ArrayLike = "Y", 
+        Z: str | ArrayLike = "Z",
         plane: str = "xy",
         slice_coord: float | u.array.unyt_quantity = 0,
         box_size: ArrayLike | None = None,
@@ -377,18 +386,18 @@ class Snapshot:
 
         # Fetch data
         data = self._get_data(data)
-        x = self._get_data(x)
-        y = self._get_data(y)
-        z = self._get_data(z)
+        X = self._get_data(X)
+        Y = self._get_data(Y)
+        Z = self._get_data(Z)
 
         if volume_selection:
             volume = self._get_data('volume')
 
         if selection is not None:
             data = data[selection]
-            x = x[selection]
-            y = y[selection]
-            z = z[selection]
+            X = X[selection]
+            Y = Y[selection]
+            Z = Z[selection]
             if volume_selection:
                 volume = volume[selection]
 
@@ -423,18 +432,18 @@ class Snapshot:
             slice_coord *= units.lscale
 
         # x_slice, y_slice, z_slice should only have one that is not None
-        x, y, z = _parse_plane(plane, x, y, z)      # redefine x y to be the plane, z the sliced direction
+        X, Y, Z = _parse_plane(plane, X, Y, Z)      # redefine x y to be the plane, z the sliced direction
 
         # Select only cells in proximity
         if volume_selection:
-            mask = np.abs(z - slice_coord) < volume**(1/3)
+            mask = np.abs(Z - slice_coord) < volume**(1/3)
             # assuming spherical cells, V^(1/3)=(4pi/3)^(1/3)R ~ 1.6R, we don't
             # include the factor such that if V is not round enough we won't
             # lose too much accuracy
             data = data[mask]
-            x = x[mask]
-            y = y[mask]
-            z = z[mask]
+            X = X[mask]
+            Y = Y[mask]
+            Z = Z[mask]
 
 
         # Make Euclidean grid
@@ -442,10 +451,10 @@ class Snapshot:
         yspace = np.linspace(y0, y1, ny, endpoint=False)
         zspace = slice_coord
 
-        X, Y, Z = np.meshgrid(xspace, yspace, zspace, indexing="ij")
+        grid_x, grid_y, grid_z = np.meshgrid(xspace, yspace, zspace, indexing="ij")
 
-        coords = np.stack([x, y, z], axis=-1)  # coordinates of the particles 
-        grid_coords = np.stack([X, Y, Z], axis=-1)  # coordinates of the grid (query points)
+        coords = np.stack([X, Y, Z], axis=-1)  # coordinates of the particles 
+        grid_coords = np.stack([grid_x, grid_y, grid_z], axis=-1)  # coordinates of the grid (query points)
         grid_coords = np.squeeze(grid_coords)            # remove extra dimension (nx, ny, 1, 3) to (nx, ny, 3)
 
         i = _kdtree_interpolate(coords=coords, grid_coords=grid_coords)

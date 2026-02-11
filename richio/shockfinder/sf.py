@@ -13,9 +13,3 @@
 #  You should have received a copy of the EUPL in an/all official language(s) of
 #  the European Union along with RICHIO.  If not, see <https://eupl.eu>.
 
-from richio import (
-    config,  # noqa: F401
-    plots,
-    units,
-)
-from richio.data import *
