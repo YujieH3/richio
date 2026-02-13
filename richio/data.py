@@ -236,9 +236,9 @@ class Snapshot:
         self,
         data: str | ArrayLike,
         res: int | ArrayLike,
-        x: str | ArrayLike = "X",
-        y: str | ArrayLike = "Y",
-        z: str | ArrayLike = "Z",
+        X: str | ArrayLike = "X",
+        Y: str | ArrayLike = "Y",
+        Z: str | ArrayLike = "Z",
         box_size: ArrayLike | None = None,
         unit_system: str = "cgs",
         selection: ArrayLike = None,
@@ -246,10 +246,10 @@ class Snapshot:
         """
         Calculate a quantity, interpolate on grid, and integrate along z axis.
         To make use of the unit system, use either str keys or unyt_array data
-        for `data`, `x`, `y`, `z`, `box_size`.
+        for `data`, `X`, `Y`, `Z`, `box_size`.
         """
         grid_data, i, xspace, yspace, zspace = self.to_grid(data, res, 
-                x, y, z, box_size, selection)
+                X, Y, Z, box_size, selection)
 
         dz = zspace[1:] - zspace[:-1]                                                 #PM: dz = (z1 - z0) / (nz - 1)
         projected_data = np.sum(grid_data[:-1, :-1, :-1] * dz, axis=-1).in_base(unit_system)#PM: grid_data[:, :, :-1]
@@ -345,15 +345,15 @@ class Snapshot:
         :param res: Resolution, can be one integer for a square grid (256 means a
             256x256 grid) or a tuple/array (X, Y) for an irregular grid
         :type res: int | ArrayLike
-        :param x: The x coordinates of mesh generating points, can be name of
+        :param X: The x coordinates of mesh generating points, can be name of
             the column or an array, defaults to "X"
-        :type x: str | ArrayLike, optional
-        :param y: The y coordinates of mesh generating points, can be name of
+        :type X: str | ArrayLike, optional
+        :param Y: The y coordinates of mesh generating points, can be name of
             the column or an array, defaults to "Y"
-        :type y: str | ArrayLike, optional
-        :param z: The z coordinates of mesh generating points, can be name of
+        :type Y: str | ArrayLike, optional
+        :param Z: The z coordinates of mesh generating points, can be name of
             the column or an array, defaults to "Z"
-        :type z: str | ArrayLike, optional
+        :type Z: str | ArrayLike, optional
         :param plane: "xy", "yz", "xz", or in any other order, like "yx",
             defaults to "xy"
         :type plane: str, optional

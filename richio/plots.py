@@ -64,17 +64,17 @@ class SnapshotPlotter:
         A quick peek at the data.
         """
         try:
-            return self.slice(data=data, res=512, x='X', y='Y', z='Z', plane='xy', slice_coord=0, **kwargs)
-        except FileNotFoundError:       # x, y, z are not found, do cmx, cmy, cmz (center of mass)
-            return self.slice(data=data, res=512, x='CMx', y='CMy', z='CMz', plane='xy', slice_coord=0, **kwargs)
+            return self.slice(data=data, res=512, X='X', Y='Y', Z='Z', plane='xy', slice_coord=0, **kwargs)
+        except FileNotFoundError:       # X, Y, Z are not found, do cmx, cmy, cmz (center of mass)
+            return self.slice(data=data, res=512, X='CMx', Y='CMy', Z='CMz', plane='xy', slice_coord=0, **kwargs)
 
     def slice(
         self, 
         data: str | ArrayLike, 
         res: int | ArrayLike, 
-        x: str | ArrayLike = "X", 
-        y: str | ArrayLike = "Y", 
-        z: str | ArrayLike = "Z",
+        X: str | ArrayLike = "X", 
+        Y: str | ArrayLike = "Y", 
+        Z: str | ArrayLike = "Z",
         plane: str = "xy",
         slice_coord: float | u.array.unyt_quantity = 0,
         box_size: ArrayLike | None = None,
@@ -93,9 +93,9 @@ class SnapshotPlotter:
         sliced_data, xspace, yspace = self.snap.slice(
             data=data, 
             res=res, 
-            x=x,
-            y=y,
-            z=z,
+            X=X,
+            Y=Y,
+            Z=Z,
             plane=plane,
             slice_coord=slice_coord,
             box_size=box_size,
@@ -125,9 +125,9 @@ class SnapshotPlotter:
         self,
         data: str | ArrayLike,
         res: int | ArrayLike,
-        x: str | ArrayLike = "X",
-        y: str | ArrayLike = "Y",
-        z: str | ArrayLike = "Z",
+        X: str | ArrayLike = "X",
+        Y: str | ArrayLike = "Y",
+        Z: str | ArrayLike = "Z",
         box_size: ArrayLike | None = None,
         unit_system: str = "cgs",
         selection: ArrayLike = None,
@@ -139,14 +139,14 @@ class SnapshotPlotter:
     ):
         """
         Make a projection plot. To make use of the unit system, use either str
-        keys or unyt_array data for `data`, `x`, `y`, `z`, `box_size`.
+        keys or unyt_array data for `data`, `X`, `Y`, `Z`, `box_size`.
         """
         projected_data, xspace, yspace = self.snap.project(
             data=data,
             res=res,
-            x=x,
-            y=y,
-            z=z,
+            X=X,
+            Y=Y,
+            Z=Z,
             box_size=box_size,
             unit_system=unit_system,
             selection=selection
